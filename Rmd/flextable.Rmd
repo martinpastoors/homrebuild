@@ -1,0 +1,20 @@
+---
+title: "FlexTable"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+library(flextable)
+ft <- flextable(head(mtcars))
+ft <- autofit(ft)
+ft
+```
+  
