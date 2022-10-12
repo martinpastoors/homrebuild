@@ -33,19 +33,25 @@ rebuiltThreshold <- 0.5
 
 # set up the OM =========================================================================================================
 
-# WHOM SAM 2022
+# WHOM SS 2022
 stock          <- "WHOM"
-assess         <- "SAM"
+assess         <- "SS"
 assessyear     <- "2022"
-# FLStockfile    <- "WHOM_SAM19_FLS_WGWIDE.RData"
-# FLStockSimfile <- "WHOM_SAM19_FLS_converged.RData"
-FLStockfile    <- "WHOM_2022_FLS_WGWIDE.RData"
-FLStockSimfile <- "WHOM_2022_FLS_converged.RData"
-OM             <- OM2.5                         #WGWIDE SAM 2022, stochastic weights, selection
+FLStockfile    <- "WHOM_SS22_FLS_WGWIDE.RData"
+FLStockSimfile <- "WHOM_SS22_FLSs_Clean.RData"
+OM             <- OM2.3    #WGWIDE SS 2022, stochastic weights, selection
+
+# WHOM SAM 2022
+# stock          <- "WHOM"
+# assess         <- "SAM"
+# assessyear     <- "2022"
+# FLStockfile    <- "WHOM_2022_FLS_WGWIDE.RData"
+# FLStockSimfile <- "WHOM_2022_FLS_converged.RData"
+# OM             <- OM2.5                         #WGWIDE SAM 2022, stochastic weights, selection
 
 # C:\TEMP\WHOM_2022\run
-
 #assessment FLStock
+# FLS <- loadRData(file.path(RData.dir,FLStockSimfile))[,,,,,1] %>% FLCore::setPlusGroup(., 15)
 FLS <- loadRData(file.path(RData.dir,FLStockfile)) %>% FLCore::setPlusGroup(., 15)
 
 #Blim <- min(ssb(FLS))
@@ -62,9 +68,10 @@ set.seed(123)
 
 #segmented regression with breakpoint at Blim, from 1995 excluding terminal
 SRR <- eqsr_fit(window(FLS,2002,2020), nsamp=niters, models = c("SegregBlim"))
+# SRR <- eqsr_fit(window(FLS,1995,2020), nsamp=niters, models = c("SegregBlim"))
 
 #emf(file = file.path(Res.dir,paste0(OM$desc,"_SRR.emf")), width = 7, height = 7)
-#eqsr_plot(SRR)
+# eqsr_plot(SRR)
 #dev.off()
 
 #reassign FLStock object with updated weights into stk slot of SRR 
@@ -77,6 +84,10 @@ FLSs@stock  <- ssb(FLSs)
 #add required number of stochastic FLStocks to FIT object
 #SRR$stks <- FLSs[(length(FLSs)-niters+1):(length(FLSs))]
 SRR$stks <- FLSs
+
+# ssb(FLSs.1k[,,,,,1])/ssb(FLS)
+# fbar(FLSs.1k[,,,,,1])/fbar(FLS)
+# rec(FLSs.1k[,,,,,1])/rec(FLS)
 
 #start,end,vectors of observation and simulation years
 #simulation starts in assessment terminal year
@@ -226,7 +237,7 @@ mp <- c("MP5.23")
   # R.initial = mean(fit$rby$rec)
   # keep.sims = FALSE
 
-  sim <- eqsim_run(fit        = SRR,
+  sim <- eqsim_run( fit        = SRR,
                     bio.years = OM$BioYrs,
                     bio.const = OM$BioConst,
                     sel.years = OM$SelYrs,
@@ -238,7 +249,7 @@ mp <- c("MP5.23")
                     SSBphi    = MP$Obs$phiSSB,
                     Blim      = OM$refPts$Blim,
                     Nrun      = nyr,
-                    recruitment.trim = c(3, -3),
+                    recruitment.trim = c(1, -1),
                     process.error = TRUE,
                     calc.RPs  = FALSE,
                     dfExplConstraints = dfExplConstraints,
@@ -249,7 +260,7 @@ mp <- c("MP5.23")
 
     
   #create a folder for the output and save simRuns data
-  dir.create(path = file.path(Res.dir,runName), showWarnings = TRUE, recursive = TRUE)
+  # dir.create(path = file.path(Res.dir,runName), showWarnings = TRUE, recursive = TRUE)
   save(SimRuns,file = file.path(Res.dir,runName,paste0(runName,"_SimRuns.RData")))
   
   #Write the output to dropbox dir (necessary to save entire image?)
@@ -281,7 +292,7 @@ mp <- c("MP5.23")
   
   #populate each stock object
   #year dimension is trimmed to the actual simulation period (may be longer depending on HCR implemented)
-  # ii <- "0.1"
+  # ii <- "0.074"
   for (ii in names(SimRuns)) {
     
     cat("Calculating statistics for run with f =",ii,"\n")
@@ -334,10 +345,10 @@ mp <- c("MP5.23")
     Stats[["obsYears"]] <- as.integer(obsYears)
     
     #SSB
-    SSB.true <- ssb(Stocks[[ii]])
-    Stats[["SSB"]][["val"]] <- fStatPercs(SSB.true, lStatPer=lStatPer)
+    SSB.true                  <- ssb(Stocks[[ii]])
+    Stats[["SSB"]][["val"]]   <- fStatPercs(SSB.true, lStatPer=lStatPer)
     #Stats[["SSB"]][["worm"]] <- FLCore::iter(SSB.true,1:numWorm)
-    Stats[["SSB"]][["worm"]] <- FLCore::iter(SSB.true,worms)
+    Stats[["SSB"]][["worm"]]  <- FLCore::iter(SSB.true,worms)     # as.data.frame(FLCore::iter(SSB.true,worms))
     
     #time to recovery after falling below Blim
     firstBelow <- recTimeBlim <- recTimeBpa <- rep(NA,dim(SSB.true)[6])

@@ -83,7 +83,7 @@ Data.dir <- file.path(MSE.dir,"Data")
 
 #any useful stuff contained in RData files
 # RData.dir <- file.path(MSE.dir,"RData")
-RData.dir <- "C:/TEMP/WHOM_2022/run"
+RData.dir <- file.path(MSE.dir,"WGWIDE22", "RData")
 
 #debug/verbose output
 Log.dir <- file.path(MSE.dir,"Logs")              
