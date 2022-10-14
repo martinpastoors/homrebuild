@@ -322,23 +322,26 @@ SS_doPar <- function (oldsubdir=inpDir, parNames, parBound, myParSet, newsubdir 
   on.exit(setwd(oldwd))
   olddir <- oldsubdir
   newdir <- file.path(inpDir, newsubdir)
-  exefile <- dir(olddir)[grep(".exe", dir(olddir))]
-  startfile <- dir(olddir)[tolower(dir(olddir)) == "starter.ss"]
-  forefile <- dir(olddir)[tolower(dir(olddir)) == "forecast.ss"]
+  
+  # print(newdir)
+  
+  exefile     <- dir(olddir)[grep(".exe", dir(olddir))]
+  startfile   <- dir(olddir)[tolower(dir(olddir)) == "starter.ss"]
+  forefile    <- dir(olddir)[tolower(dir(olddir)) == "forecast.ss"]
   wtatagefile <- dir(olddir)[tolower(dir(olddir)) == "wtatage.ss"]
-  testfile <- dir(olddir)[tolower(dir(olddir)) == "test.ss"]
-  parfile <- dir(olddir)[dir(olddir) == "SS3.par"]
+  testfile    <- dir(olddir)[tolower(dir(olddir)) == "test.ss"]
+  parfile     <- dir(olddir)[dir(olddir) == "SS3.par"]
   if (length(startfile) == 0) 
     stop("No starter.ss file found in ", olddir)
-  startfile <- file.path(olddir, startfile)
+  startfile   <- file.path(olddir, startfile)
   cat("Get input file names from starter file:", startfile, 
       "\n")
-  starter <- SS_readstarter(startfile, verbose = FALSE)
-  ctlfile <- starter$ctlfile
+  starter     <- SS_readstarter(startfile, verbose = FALSE)
+  ctlfile     <- starter$ctlfile
   #control <- SS_readctl_3.30(file=file.path(olddir, ctlfile), nseas = 1, N_areas = 1, Nages = 20, Ngenders = 1, Npopbins = NA, Nfleet = 1, Nsurveys = 4)
-  datfile <- starter$datfile
-  filenames <- c(exefile, forefile, ctlfile, datfile, wtatagefile, 
-                 testfile, parfile)
+  datfile     <- starter$datfile
+  filenames   <- c(exefile, forefile, ctlfile, datfile, wtatagefile, 
+                   testfile, parfile)
   cat("copying model files from\n", olddir, "\nto\n", newdir, 
       "\n")
   cat("model files to copy:", filenames, sep = "\n ")

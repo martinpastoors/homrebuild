@@ -13,7 +13,7 @@
 # 01/07/2020 included additional features by Martin Pastoors
 # ================================================================================================================
 
-source("Scripts/01_EqSim_setup.R")
+# source("Scripts/01_EqSim_setup.R")
 
 #Note: niters and nyr could be included in the OM or MP definitions
 
@@ -34,25 +34,25 @@ rebuiltThreshold <- 0.5
 # set up the OM =========================================================================================================
 
 # WHOM SS 2022
-stock          <- "WHOM"
-assess         <- "SS"
-assessyear     <- "2022"
-FLStockfile    <- "WHOM_SS22_FLS_WGWIDE.RData"
-FLStockSimfile <- "WHOM_SS22_FLSs_Clean.RData"
-OM             <- OM2.3    #WGWIDE SS 2022, stochastic weights, selection
+# stock          <- "WHOM"
+# assess         <- "SS"
+# assessyear     <- "2022"
+# FLStockfile    <- "WHOM_SS22_FLS_WGWIDE.RData"
+# FLStockSimfile <- "WHOM_SS22_FLSs_Clean.RData"
+# OM             <- OM2.3    #WGWIDE SS 2022, stochastic weights, selection
 
 # WHOM SAM 2022
-# stock          <- "WHOM"
-# assess         <- "SAM"
-# assessyear     <- "2022"
-# FLStockfile    <- "WHOM_2022_FLS_WGWIDE.RData"
-# FLStockSimfile <- "WHOM_2022_FLS_converged.RData"
-# OM             <- OM2.5                         #WGWIDE SAM 2022, stochastic weights, selection
+stock          <- "WHOM"
+assess         <- "SAM"
+assessyear     <- "2022"
+FLStockfile    <- "WHOM_SAM22_FLS_WGWIDE.RData"
+FLStockSimfile <- "WHOM_SAM22_FLSs_converged.RData"
+OM             <- OM2.5                         #WGWIDE SAM 2022, stochastic weights, selection
 
 # C:\TEMP\WHOM_2022\run
 #assessment FLStock
 # FLS <- loadRData(file.path(RData.dir,FLStockSimfile))[,,,,,1] %>% FLCore::setPlusGroup(., 15)
-FLS <- loadRData(file.path(RData.dir,FLStockfile)) %>% FLCore::setPlusGroup(., 15)
+FLS <- loadRData(file.path(RData.dir,paste0(assess, assessyear), FLStockfile)) %>% FLCore::setPlusGroup(., 15)
 
 #Blim <- min(ssb(FLS))
 #The IBP in 2019 selected SSB in 2003 as a proxy for Bpa and derived Blim from this (Bpa/1.4)
@@ -67,7 +67,8 @@ SegregBlim  <- function(ab, ssb) log(ifelse(ssb >= Blimloss, ab$a * Blimloss, ab
 set.seed(123)
 
 #segmented regression with breakpoint at Blim, from 1995 excluding terminal
-SRR <- eqsr_fit(window(FLS,2002,2020), nsamp=niters, models = c("SegregBlim"))
+#SRR <- eqsr_fit(window(FLS,2002,2020), nsamp=niters, models = c("SegregBlim"))
+SRR <- eqsr_fit(window(FLS,1995,2020), nsamp=niters, models = c("SegregBlim"))
 # SRR <- eqsr_fit(window(FLS,1995,2020), nsamp=niters, models = c("SegregBlim"))
 
 #emf(file = file.path(Res.dir,paste0(OM$desc,"_SRR.emf")), width = 7, height = 7)
@@ -78,7 +79,7 @@ SRR <- eqsr_fit(window(FLS,2002,2020), nsamp=niters, models = c("SegregBlim"))
 SRR$stk <- FLS
 
 #start with simulated initial populations (only for specified number of iterations)
-FLSs        <- loadRData(file.path(RData.dir,FLStockSimfile))[,,,,,1:niters]
+FLSs        <- loadRData(file.path(RData.dir,paste0(assess, assessyear),FLStockSimfile))[,,,,,1:niters]
 FLSs@stock  <- ssb(FLSs)
 
 #add required number of stochastic FLStocks to FIT object
@@ -249,7 +250,7 @@ mp <- c("MP5.23")
                     SSBphi    = MP$Obs$phiSSB,
                     Blim      = OM$refPts$Blim,
                     Nrun      = nyr,
-                    recruitment.trim = c(1, -1),
+                    recruitment.trim = c(3, -3),
                     process.error = TRUE,
                     calc.RPs  = FALSE,
                     dfExplConstraints = dfExplConstraints,
@@ -261,7 +262,7 @@ mp <- c("MP5.23")
     
   #create a folder for the output and save simRuns data
   # dir.create(path = file.path(Res.dir,runName), showWarnings = TRUE, recursive = TRUE)
-  save(SimRuns,file = file.path(Res.dir,runName,paste0(runName,"_SimRuns.RData")))
+  save(SimRuns,file = file.path(Res.dir,paste0(runName,"_SimRuns.RData")))
   
   #Write the output to dropbox dir (necessary to save entire image?)
   #save.image(file = file.path(dropbox.dir,paste0(runName,"_Workspace.Rdata")))
@@ -367,8 +368,8 @@ mp <- c("MP5.23")
         abovebpa  = ifelse(data > OM$refPts$Bpa,  1, 0)) %>% 
       group_by(year) %>% 
       summarise(
-        propaboveblim = sum(aboveblim) / n(),
-        propabovebpa  = sum(abovebpa) / n()
+        propaboveblim = sum(aboveblim) / dplyr::n(),
+        propabovebpa  = sum(abovebpa) / dplyr::n()
       ) 
     
     recoverydf <-
@@ -387,8 +388,8 @@ mp <- c("MP5.23")
       ) %>% 
       group_by(year) %>% 
       summarise(
-        recoveredaboveblim = sum(threeyearsaboveblim) / n(),
-        recoveredabovebpa  = sum(threeyearsabovebpa) / n()
+        recoveredaboveblim = sum(threeyearsaboveblim) / dplyr::n(),
+        recoveredabovebpa  = sum(threeyearsabovebpa) / dplyr::n()
       ) 
     
     recYearBlim <-
@@ -678,7 +679,7 @@ mp <- c("MP5.23")
   dir.create(path = file.path(Res.dir,"Stats"), showWarnings = TRUE, recursive = TRUE)
   
   cat("Saving eqSim Stats RData file", "\n")
-  save(lStats,file = file.path(Res.dir,"Stats",paste0(runName,"_eqSim_Stats.Rdata")))
+  save(lStats,file = file.path(Res.dir,paste0(runName,"_eqSim_Stats.Rdata")))
   
   # Save settings
   # settings <- fGetSettings(lStats, SimRuns, FLStockfile = FLStockfile,FLStockSimfile = FLStockSimfile,OM=OM, MP=MP, niters=niters, nyr=nyr)

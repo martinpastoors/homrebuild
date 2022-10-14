@@ -79,11 +79,11 @@ Base.dir <- getwd()
 MSE.dir <- file.path(Base.dir)
 
 #this is where the results of the 1000 assessment runs for initialisation of the MSE are saved
-Data.dir <- file.path(MSE.dir,"Data")              
+Data.dir <- file.path(MSE.dir,"datasim")              
 
 #any useful stuff contained in RData files
 # RData.dir <- file.path(MSE.dir,"RData")
-RData.dir <- file.path(MSE.dir,"WGWIDE22", "RData")
+RData.dir <- file.path(MSE.dir,"datasim")
 
 #debug/verbose output
 Log.dir <- file.path(MSE.dir,"Logs")              

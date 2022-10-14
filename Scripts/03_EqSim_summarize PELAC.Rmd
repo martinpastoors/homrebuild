@@ -1,0 +1,1192 @@
+---
+output: 
+  word_document:
+    reference_docx: ..\PFA_report_template_v1.4.dotx
+---
+
+```{r setup, include=FALSE}
+
+################################################################################
+# EqSim Summarize.Rmd
+#
+# 06/07/2020 tested on 1000 iters of SAM assessment
+# 05/08/2020 converted to Rmd file
+#
+################################################################################
+
+require("knitr")
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, crop = TRUE, comment = "")
+knitr::opts_chunk$set(fig.width=10) 
+
+options(dplyr.summarise.inform = FALSE)
+
+
+# rm(list=ls())
+invisible(gc())
+
+library(FLCore)
+library(tidyverse)
+
+
+Base.dir <- dirname(getwd())
+MSE.dir   <- file.path(Base.dir, "Scripts")
+Data.dir  <- file.path(Base.dir,"data")              
+RData.dir <- Data.dir
+Res.dir   <- file.path(Base.dir, "Results")
+stats.dir <- Res.dir
+wkrebuild.dir <- "C:/DATA/GIT/wk_WKREBUILD/EqSimWHM/Results/Stats"
+
+Source.dir <- file.path(Base.dir,"R")              #R functions
+source(file.path(Source.dir,"utilities.R"))
+
+# Rebuilding threshold
+rebuiltThreshold <- 0.5
+
+file.list <- list.files(path=stats.dir, pattern="_Stats", full.names=TRUE)
+
+# Add results from WKWHMRP analysis
+file.list <- c(file.list,
+               file.path(wkrebuild.dir, "WHOM_SAM_2020_OM2.5_1000_MP5.23_23_eqSim_Stats.RData"),
+               file.path(wkrebuild.dir, "WHOM_SS3_2020_OM2.3_1000_MP5.23_23_eqSim_Stats.RData")
+               )
+
+# manual fixing of units
+my_units <- data.frame(
+  perfstat = c("stock","fbar","catch","rec",     "tac", "pblim", "precbpa", "iav"),
+  unit2     = c(   "kt","F(1-10)",   "kt","billions", "kt", "proportion","proportion", "proportion change"),
+  stringsAsFactors = FALSE)
+
+# print(file.list)
+i <- 1
+
+df <- rp <- data.frame(stringsAsFactors = FALSE)
+
+for (i in 1:length(file.list)) {
+  print(file.list[i])
+  df <- bind_rows(df, loadRData(file.list[i])[["df"]])
+  rp <- bind_rows(rp, 
+                  loadRData(file.list[i])[["OM"]][["refPts"]] %>% 
+                    as.data.frame() %>% 
+                    mutate(assess     = stringr::word(basename(file.list[i]), 2, sep="_")) %>% 
+                    mutate(assessyear = stringr::word(basename(file.list[i]), 3, sep="_")) %>% 
+                    lowcase() %>% 
+                    mutate(flow = fmsy/5) %>% 
+                    tidyr::pivot_longer(names_to = "refpoint", values_to = "data", 
+                                        c("fpa","flim","fmsy","flow", "msybtrigger", "blim", "bpa","bloss"))  %>% 
+                    mutate(perfstat = ifelse(grepl("^f", refpoint), "fbar","stock")) %>% 
+                    mutate(data = ifelse(perfstat=="stock", data/1000, data)) %>% 
+                    tidyr::pivot_wider(names_from = refpoint, values_from = data)
+                  )
+                    
+}
+
+loadRData(file.list[3])[["df"]] %>% View()
+
+
+
+# COULD BE DONE IN SIMULATION CODE
+df <- 
+  df %>%  
+  
+  filter(niters==1000) %>% 
+
+  mutate(method = "EQSIM") %>% 
+  
+  # mutate(period = ifelse(is.na(period) & year <= (an(assessyear)), "HI",period)) %>% 
+  mutate(assess = ifelse(assess =="SS", "SS3", assess) ) %>% 
+  mutate(period = ifelse(an(year) < an(assessyear), "HI",period) ) %>% 
+  mutate(ftgt = ac(ftgt)) %>% 
+  
+  left_join(my_units, by="perfstat") %>% 
+  
+  mutate(
+    mean   = ifelse(perfstat == "stock", mean/1000, mean),
+    median = ifelse(perfstat == "stock", median/1000, median),
+    lower  = ifelse(perfstat == "stock", lower/1000, lower),
+    upper  = ifelse(perfstat == "stock", upper/1000, upper),
+    data   = ifelse(perfstat == "stock", data/1000, data),
+  ) %>% 
+  mutate(
+    blim      = ifelse(perfstat == "stock", blim/1000, NA),
+    bpa       = ifelse(perfstat == "stock", bpa/1000, NA),
+    msybtrig  = ifelse(perfstat == "stock", bpa/1000, NA)
+  ) %>%  
+  
+  mutate(
+    mean   = ifelse(perfstat == "rec", mean/1000000, mean),
+    median = ifelse(perfstat == "rec", median/1000000, median),
+    lower  = ifelse(perfstat == "rec", lower/1000000, lower),
+    upper  = ifelse(perfstat == "rec", upper/1000000, upper),
+    data   = ifelse(perfstat == "rec", data/1000000, data)
+  ) %>% 
+
+  mutate(
+    mean   = ifelse(perfstat == "catch", mean/1000, mean),
+    median = ifelse(perfstat == "catch", median/1000, median),
+    lower  = ifelse(perfstat == "catch", lower/1000, lower),
+    upper  = ifelse(perfstat == "catch", upper/1000, upper),
+    data   = ifelse(perfstat == "catch", data/1000, data)
+  ) 
+
+
+# save(df, file="df.RData")
+
+# ========================================================================================================
+
+# plotvar function
+
+plotvar <- function(mystock      =  "WHOM",
+                    myassess     = "SAM",
+                    myassessyear = c("2019","2020"),
+                    mymethod  = "EQSIM",
+                    myom         = c("OM2.4","OM2.5"),
+                    myniters     = "1000",
+                    mymp         = c("MP5.23"),
+                    mynyrs       = "23",
+                    myftgt       = ac(c(0.0, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15)),
+                    myperfstat   = "stock",
+                    mycolour     = "blue",
+                    myyintercept = "blim",
+                    myvalue      = "median",
+                    myfacets     = c("assessyear","ftgt"),
+                    myfirstyear  = as.numeric(NA),
+                    mylastyear   = as.numeric(NA),
+                    scale_y_free = FALSE) {
+  
+  
+  # history
+  h <-
+    df %>% 
+    filter(period     %in% c("HI")) %>% 
+    filter(perfstat   %in% myperfstat) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method     %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    # filter(nyrs       %in% mynyrs) %>% 
+    filter(ftgt       %in% ac(myftgt)) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>%   
+    
+    mutate(age = as.numeric(age)) %>% 
+    mutate(assess = factor(assess, levels=myassess))
+
+  # future
+  d <- 
+    df %>%
+    filter(period     %in% c("CU","ST","MT",'LT')) %>% 
+    filter(perfstat   %in% myperfstat) %>% 
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method  %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>%
+    # filter(nyrs       %in% mynyrs) %>% 
+    filter(ftgt       %in% ac(myftgt)) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>%   
+    
+    mutate(age  = as.numeric(age)) %>% 
+    mutate(assess = factor(assess, levels=myassess))
+
+    
+  # periods
+  p <-
+    bind_rows(h, d) %>% 
+    distinct(assessyear, period, year) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>%   
+    
+    group_by(assessyear, period) %>% 
+    summarise(
+      minyear = min(year),
+      maxyear = max(year)
+    )
+  
+  # intercept
+  if(!all(is.na(myyintercept))) {
+    i <-
+      h %>% 
+      distinct(perfstat, y=get(myyintercept)) %>% 
+      drop_na() 
+  } else {
+    i <- an(NA)
+  }
+
+  # title
+  t <- paste(
+    toupper(mystock),
+    paste(unique(myassess), collapse="-"),
+    paste(unique(myassessyear), collapse="-"),
+    # paste(unique(mymethod), collapse="-"),
+    paste(unique(myom), collapse="-"),
+    paste(unique(mymp), collapse="-"),
+    toupper(myperfstat),
+    sep="_"
+  )
+  
+  # h %>% filter(!is.na(iter), !is.na(data)) %>% View()
+  
+  myfig <- 
+
+    ggplot(d, aes(x=year, y=get(myvalue), group=mp)) +
+    theme_publication() +
+    theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+    theme( panel.grid.major.x = element_blank()) +
+    theme(legend.position = "none") +
+    theme(panel.spacing = unit(0.2, "lines")) +
+    
+    # historical ribbon
+    geom_ribbon(data=filter(h, !is.na(get(myvalue))),
+                aes(ymin=lower, ymax=upper, group=iter), alpha=0.4, fill="gray") +
+    
+    # historical worms
+    geom_line(data=filter(h, metric=="worm"),
+              aes(x=year, y=data, group=iter), colour="darkgray", size=0.5) +
+    
+    # historical median
+    geom_line(data=filter(h, !is.na(get(myvalue))),
+              aes(x=year,y=get(myvalue),group=iter), colour="black", size=1) +
+    
+    # future ribbon
+    geom_ribbon(data=filter(d, !is.na(get(myvalue))),
+                aes(ymin=lower, ymax=upper, group=iter, fill=perfstat), alpha=0.4) +
+    scale_fill_manual(values=mycolour) + 
+    
+    # future worms
+    geom_line(data=filter(d, metric=="worm"),
+              aes(x=year, y=data, group=iter, colour=perfstat), size=0.5) +
+    scale_colour_manual(values=mycolour) + 
+    
+    # future median
+    geom_line(data=filter(d, !is.na(get(myvalue))),
+              aes(x=year,y=get(myvalue),group=iter, colour=perfstat), size=1) +
+    
+    # hline
+    {if(!all(is.na(myyintercept))) geom_hline(data=i,
+                                              aes(yintercept=y), linetype="dashed")}  +
+    
+    # vertical lines (periods)
+    geom_vline(data=filter(p, period=="CU"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="ST"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="MT"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="LT"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="LT"),
+               aes(xintercept=maxyear), linetype="dotted") +
+    
+    expand_limits(y=0) +
+    labs(x="", y=myperfstat, title=t) +
+
+    {if(scale_y_free==TRUE) {
+      facet_grid(get(myfacets[1]) ~ get(myfacets[2]), scales="free_y")
+    } else {
+      facet_grid(get(myfacets[1]) ~ get(myfacets[2]))
+    }}
+    
+  print(myfig)
+  
+  ggsave(file = file.path(Res.dir,paste0(t, ".png")),
+         device="png", width = 30, height = 20, units = "cm")
+
+}
+
+# ========================================================================================================
+
+# plotrecovery
+
+# mystock      = "WHOM"
+# myassess     = "SAM"
+# myassessyear = c("2022")
+# mymethod     = c("EQSIM")
+# myom         = c("OM2.5")
+# mymp         = c("MP5.23")
+# myftgt       = c(0.001, 0.05, 0.075, 0.10, 0.15)
+# myfacets     = c("mp","ftgt")
+# myfirstyear  = 2005
+# mylastyear   = max(df$year)
+# myintercept  = 0.5
+
+plotrecovery <- function(
+                    mystock      =  "WHOM",
+                    myassess     = "SAM",
+                    myassessyear = c("2019","2020"),
+                    mymethod     = "EQSIM",
+                    myom         = c("OM2.4","OM2.5"),
+                    mymp         = c("MP5.23"),
+                    myftgt       = c(0.0, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15),
+                    myintercept  = 0.5,
+                    myfacets     = c("assessyear","ftgt"),
+                    myfirstyear  = as.numeric(NA),
+                    mylastyear   = as.numeric(NA)) {
+  
+  # plot recovery to blim and bpa
+  d <-
+    df %>%
+    filter(perfstat %in% c("precblim","precbpa")) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method  %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    filter(ftgt       %in% myftgt) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>% 
+    
+    mutate(assess = factor(assess, levels=myassess))
+
+  
+  # lines
+  p <-
+    df %>%
+    filter(perfstat %in% c("firstyearrebuildtoblim","firstyearrebuildtobpa")) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method  %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    filter(ftgt       %in% myftgt) %>% 
+    
+    mutate(perfstat = case_when(
+      perfstat == "firstyearrebuildtoblim" ~ "precblim",
+      perfstat == "firstyearrebuildtobpa"  ~ "precbpa",
+      TRUE                                 ~ perfstat
+    )) %>% 
+    
+    mutate(assess = factor(assess, levels=myassess))
+
+
+  # title
+  t <- paste(
+    toupper(mystock),
+    paste(unique(myassess), collapse="-"),
+    paste(unique(myassessyear), collapse="-"),
+    # paste(unique(mymethod), collapse="-"),
+    paste(unique(myom), collapse="-"),
+    paste(unique(mymp), collapse="-"),
+    "recovery",
+    sep="_"
+  )
+  
+  myfig <-
+    d %>% 
+    ggplot(aes(x=year, y=mean, group=perfstat)) +
+    theme_publication() +
+    theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+    theme( panel.grid.major.x = element_blank()) +
+    
+    geom_vline(data=p, aes(xintercept=mean, colour=perfstat), linetype="dashed") +
+
+    geom_hline(yintercept=myintercept, colour="gray", linetype="dashed") +
+    
+    geom_text(data=filter(p, perfstat %in% c("precblim")),
+              aes(x=mean, label=ac(mean), colour=perfstat),
+              y=1.0, vjust=1, hjust=0, nudge_x = 1, size=3) +
+    
+    geom_text(data=filter(p, perfstat %in% c("precbpa")),
+              aes(x=mean, label=ac(mean), colour=perfstat),
+              y=0.0, vjust=0, hjust=0, nudge_x = 1, size=3) +
+    
+    geom_line(aes(colour=perfstat)) +
+    
+    expand_limits(y=0) +
+    labs(x="", y="", title=t) +
+    facet_grid(get(myfacets[1]) ~ get(myfacets[2])) 
+  
+  print(myfig)
+  
+  ggsave(file = file.path(Res.dir,paste0(t, ".png")),
+         device="png", width = 30, height = 20, units = "cm")
+  
+  
+} # end of plotrecovery
+
+# ========================================================================================================
+
+# plot prob being below blim
+
+# mystock      = "WHOM"
+# myassess     = c("SS3", "SAM")
+# myassessyear = c("2020", "2022")
+# mymethod     = c("EQSIM")
+# myom         = c("OM2.3", "OM2.5")
+# mymp         = c("MP5.23")
+# myftgt       = c(0.074)
+# myfacets     =  c("assess", "assessyear")
+# myfirstyear  = 2005
+# mylastyear   = NA
+# mycolour = "red"
+
+plotpblim <- function(
+                    mystock      =  "WHOM",
+                    myassess     = "SAM",
+                    myassessyear = c("2019","2020"),
+                    mymethod     = "EQSIM",
+                    myom         = c("OM2.4","OM2.5"),
+                    mymp         = c("MP5.23"),
+                    myftgt       = c(0.0, 0.025, 0.05, 0.075, 0.10, 0.125, 0.15),
+                    myfacets     = c("assessyear","ftgt"),
+                    myfirstyear  = as.numeric(NA),
+                    mylastyear   = as.numeric(NA),
+                    mycolour     = "red") {
+  
+  # plot historical probability below blim and bpa
+  h <-
+    df %>% 
+    # filter(period     %in% c("HI")) %>% 
+    filter(perfstat   %in% c("pblim")) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method     %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    filter(ftgt       %in% myftgt) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)}%>% 
+    
+    mutate(assess = factor(assess, levels=myassess))
+    
+  # plot probability below blim and bpa
+  d <-
+    df %>%
+    filter(period     %in% c("CU","ST","MT",'LT')) %>% 
+    filter(perfstat   %in% c("pblim")) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method     %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    filter(ftgt       %in% myftgt) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)}%>% 
+    
+    mutate(assess = factor(assess, levels=myassess))
+
+  
+  # periods
+  p <-
+    d %>% 
+    distinct(assessyear, period, year) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>%   
+    
+    group_by(assessyear, period) %>% 
+    summarise(
+      minyear = min(year),
+      maxyear = max(year)
+    )
+  
+  # firstyear pblim
+  p1 <-
+    d %>% 
+    filter(mean       < 0.05) %>% 
+    group_by(perfstat, stock, assess, assessyear, method, om, mp, ftgt) %>% 
+    summarise(mean = min(year, na.rm=TRUE))
+
+  # title
+  t <- paste(
+    toupper(mystock),
+    paste(unique(myassess), collapse="-"),
+    paste(unique(myassessyear), collapse="-"),
+    # paste(unique(mymethod), collapse="-"),
+    paste(unique(myom), collapse="-"),
+    paste(unique(mymp), collapse="-"),
+    "pBlim",
+    sep="_"
+  )
+  
+  myfig <-
+    d %>% 
+    ggplot(aes(x=year, y=mean, group=perfstat)) +
+    theme_publication() +
+    theme(axis.text.x = element_text(angle = 90, vjust=0.5)) +
+    theme( panel.grid.major.x = element_blank()) +
+    
+    geom_hline(yintercept=0.05, colour="gray", linetype="dashed") +
+    
+    geom_vline(data=p1, aes(xintercept=mean), colour=mycolour, linetype="dashed") +
+    geom_text(data= p1,
+              aes(x=mean, label=ac(mean)),
+              y=0.05, vjust=0, hjust=0, nudge_x = 0.2, colour=mycolour) +
+    
+    geom_line(data=h, colour="darkgray") +
+    geom_line(aes(colour=perfstat), size=1) +
+    
+    # vertical lines (periods)
+    geom_vline(data=filter(p, period=="CU"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="ST"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="MT"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="LT"),
+               aes(xintercept=minyear), linetype="dotted") +
+    geom_vline(data=filter(p, period=="LT"),
+               aes(xintercept=maxyear), linetype="dotted") +
+
+    expand_limits(y=0) +
+    labs(x="", y="", title=t) +
+    facet_grid(get(myfacets[[1]]) ~ get(myfacets[[2]])) 
+  
+  print(myfig)
+  
+  ggsave(file = file.path(Res.dir,paste0(t, ".png")),
+         device="png", width = 30, height = 20, units = "cm")
+  
+  
+} # end of plotpblim
+
+
+
+# ========================================================================================================
+
+# plotscenario
+
+# mystock      =  "WHOM"
+# myassess     = "SS3"
+# myassessyear = c("2020")
+# mymethod     = "EQSIM"
+# myom         = c("OM2.3")
+# mymp         = c("MP5.23")
+# myftgt       = c(0.075)
+# myfacets     = c("perfstat")
+# myfirstyear  = 2000
+# mylastyear   = as.numeric(NA)
+# myperfstat   = c("stock","fbar", "pblim", "precbpa")
+# mycolours    = c("red","blue","green", "blue")
+
+# mystock      =  "WHOM"
+# myassess     = "SS3"
+# myassessyear = c("2020")
+# mymethod     = "EQSIM"
+# myom         = c("OM2.3")
+# mymp         = c("MP5.23")
+# myftgt       = c("0.074")
+# myfacets     = c("perfstat")
+# myfirstyear  = 2000
+# mylastyear   = as.numeric(NA)
+# myperfstat   = c("fbar")
+# mycolours    = c("blue")
+# mylastyear   = as.numeric(NA)
+# showtitle = TRUE
+
+plotscenario <- function(
+                    mystock      =  "WHOM",
+                    myassess     = "SAM",
+                    myassessyear = c("2022"),
+                    mymethod     = "EQSIM",
+                    myom         = c("OM2.5"),
+                    mymp         = c("MP5.25"),
+                    myftgt       = c(0.075),
+                    myfacets     = c("perfstat"),
+                    myfirstyear  = as.numeric(NA),
+                    mylastyear   = as.numeric(NA),
+                    myperfstat   = c("stock","pblim"),
+                    mycolours    = rep(c("red","blue","green", "blue"),5),
+                    showtitle    = FALSE, 
+                    ncolumns     = 1 ) {
+  
+  # history
+  h <-
+    df %>% 
+    # filter(period     %in% c("HI")) %>% 
+    filter(perfstat   %in% myperfstat) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method     %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>%
+    filter(ftgt       %in% myftgt) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>% 
+    
+    mutate(age = as.numeric(age)) 
+
+  # future
+  d <- 
+    df %>%
+    filter(period     %in% c("CU","ST","MT",'LT')) %>% 
+    filter(perfstat   %in% myperfstat) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method  %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    filter(ftgt       %in% myftgt) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>% 
+    
+    mutate(age  = as.numeric(age)) 
+    
+  # periods
+  p <-
+    bind_rows(h, d) %>% 
+    distinct(assessyear, period, year) %>% 
+    
+    {if(!is.na(myfirstyear)) filter(., year >= myfirstyear) else (.)} %>%    
+    {if(!is.na(mylastyear))  filter(., year <= mylastyear) else (.)} %>%   
+    
+    group_by(assessyear, period) %>% 
+    summarise(
+      minyear = min(year),
+      maxyear = max(year)
+    )
+
+  # units
+  u <-
+    d %>% 
+    distinct(perfstat, unit2)
+  
+  # reference points
+  rp1 <-
+    rp %>% 
+    filter(assess %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    distinct(perfstat, blim, bpa, msybtrigger, fmsy, flow) 
+  
+  # View(rp)
+  
+  # firstyear pblim
+  p1 <-
+    df %>% 
+    filter(perfstat   %in% c("pblim")) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method     %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    filter(ftgt       %in% myftgt) %>% 
+    filter(!period    %in% c("HI")) %>%
+    filter(mean       < 0.05) %>% 
+    
+    group_by(perfstat, stock, assess, assessyear, method, om, mp, ftgt) %>% 
+    summarise(mean = min(year, na.rm=TRUE))
+    
+    
+  # recoverylines
+  p2 <-
+    df %>%
+    filter(perfstat %in% c("firstyearrebuildtobpa")) %>%
+    filter(stock      %in% mystock) %>% 
+    filter(assess     %in% myassess) %>% 
+    filter(assessyear %in% myassessyear) %>% 
+    filter(method     %in% mymethod) %>% 
+    filter(om         %in% myom) %>% 
+    filter(mp         %in% mymp) %>% 
+    filter(ftgt       %in% myftgt) %>% 
+    
+    mutate(perfstat = case_when(
+      perfstat == "firstyearrebuildtoblim" ~ "precblim",
+      perfstat == "firstyearrebuildtobpa"  ~ "precbpa",
+      TRUE                                 ~ perfstat
+    ))
+  
+  # title
+  t <- paste(
+    toupper(mystock),
+    paste(unique(myassess), collapse="-"),
+    paste(unique(myassessyear), collapse="-"),
+    # paste(unique(mymethod), collapse="-"),
+    paste(unique(myom), collapse="-"),
+    paste(unique(mymp), collapse="-"),
+    sep="_"
+  )
+  
+  plist <- list(NULL)
+  i <- 1
+  for (i in 1:length(myperfstat)) {
+    if(myperfstat[[i]] %in% c("stock","fbar","catch","rec","tac", "iav")) {
+      
+      print(i)
+      
+      plist[[i]] <-
+        d %>% 
+        filter(perfstat==myperfstat[[i]]) %>% 
+        ggplot(aes(x=year, y=mean, group=perfstat)) +
+        theme_publication() +
+        theme(plot.margin = unit(c(0,0,0,0), "cm")) +
+        theme(legend.position="none") +
+        theme( panel.grid.major.x = element_blank()) +
+        theme(strip.text = element_text(size = 12)) +
+
+        {if (i == length(myperfstat)) 
+          theme(axis.text.x = element_text(angle = 90, vjust=0.5)) else 
+            theme(axis.text.x = element_blank()) } +
+        
+        # historical ribbon
+        geom_ribbon(data=filter(h, !is.na(mean), perfstat==myperfstat[[i]]),
+                    aes(ymin=lower, ymax=upper, group=iter), alpha=0.4, fill="gray") +
+        
+        # historical worms
+        geom_line(data=filter(h, metric=="worm", perfstat==myperfstat[[i]]),
+                  aes(x=year, y=data, group=iter), colour="darkgray", size=0.3) +
+        
+        # historical median
+        geom_line(data=filter(h, !is.na(median), perfstat==myperfstat[[i]]), 
+                  aes(x=year,y=median, group=iter), colour="black", size=1.5) +
+    
+        # future ribbon
+        geom_ribbon(data=filter(d, !is.na(median), perfstat==myperfstat[[i]]),
+                    aes(ymin=lower, ymax=upper, group=iter), alpha=0.3, fill=mycolours[[i]]) +
+        
+        # future worms
+        geom_line(data=filter(d, metric=="worm", perfstat==myperfstat[[i]]),
+                  aes(x=year, y=data, group=iter), colour=mycolours[[i]], size=0.3) +
+        
+        # future median
+        geom_line(data=filter(d, !is.na(median), perfstat==myperfstat[[i]]),
+                  aes(x=year,y=median,group=iter), colour=mycolours[[i]], size=1.5) +
+        
+        # vertical lines (periods)
+        geom_vline(data=filter(p, period=="CU"),
+                   aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="ST"),
+        #            aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="MT"),
+        #            aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="LT"),
+        #            aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="LT"),
+        #            aes(xintercept=maxyear), linetype="dotted") +
+    
+        # horizontal lines (reference points)
+        # blim
+        {if (myperfstat[[i]] == "stock") geom_hline(aes(yintercept=blim), linetype="dashed") } +
+        {if (myperfstat[[i]] == "stock") geom_text(data=filter(rp, perfstat=="stock"), 
+                                                   aes(y=blim), label="blim", x=myfirstyear,
+                                                   vjust=0, hjust=0, inherit.aes = FALSE) } +
+        
+        # bpa
+        {if (myperfstat[[i]] == "stock") geom_hline(aes(yintercept=bpa), linetype="dotted") } +
+        {if (myperfstat[[i]] == "stock") geom_text(data=filter(rp, perfstat=="stock"), 
+                                                   aes(y=bpa), label="bpa", x=myfirstyear, 
+                                                   vjust=0, hjust=0, inherit.aes = FALSE) } +
+        
+        # ftgt
+        {if (myperfstat[[i]] == "fbar") geom_hline(aes(yintercept=as.numeric(ftgt)), linetype="dashed") } +
+        {if (myperfstat[[i]] == "fbar") geom_text(aes(y=as.numeric(ftgt)), label="ftgt", x=myfirstyear, 
+                                                   vjust=0, hjust=0, inherit.aes = FALSE) } +
+
+        # flow
+        {if (myperfstat[[i]] == "fbar") geom_hline(aes(yintercept=as.numeric(ftgt)/5), linetype="dashed") } +
+        {if (myperfstat[[i]] == "fbar") geom_text(aes(y=as.numeric(ftgt)/5), label="flow", x=myfirstyear, 
+                                                   vjust=0, hjust=0, inherit.aes = FALSE) } +
+        
+        # fmsy
+        {if (myperfstat[[i]] == "fbar") geom_hline(data=filter(rp1, perfstat=="fbar"), 
+                                                  aes(yintercept=as.numeric(fmsy)), linetype="dashed") } +
+        {if (myperfstat[[i]] == "fbar") geom_text(data=filter(rp1, perfstat=="fbar"), 
+                                                  aes(y=as.numeric(fmsy)), label="fmsy", x=max(d$year), 
+                                                   vjust=0, hjust=1, inherit.aes = FALSE) } +
+        expand_limits(y=0) +
+        
+        scale_x_continuous(breaks=seq(min(h$year), max(d$year), 5)) +
+        
+        labs(x="", y = filter(u, perfstat == myperfstat[[i]])$unit2) +
+        {if(i==1 & showtitle==TRUE) labs(title=t)} +
+        
+        facet_wrap( ~ perfstat)
+      
+  
+    } else if (myperfstat[i] %in% c("pblim")) {
+      
+      print(i)
+           
+      plist[[i]] <-
+        ggplot(data=filter(d, perfstat==myperfstat[[i]]), 
+                   aes(x=year, y=mean, group=perfstat)) +
+        theme_publication() +
+        theme(plot.margin = unit(c(0,0,0,0), "cm")) +
+        theme(legend.position="none") +
+        theme( panel.grid.major.x = element_blank()) +
+        theme(strip.text = element_text(size = 12)) +
+        {if (i == length(myperfstat)) theme(axis.text.x = element_text(angle = 90, vjust=0.5)) else 
+          theme(axis.text.x = element_blank()) } +
+        
+        geom_hline(yintercept=0.05, colour="gray", linetype="dashed") +
+        
+        geom_vline(data=p1, aes(xintercept=mean), colour=mycolours[[i]], linetype="dashed") +
+        geom_text(data= p1,
+                  aes(x=mean, label=ac(mean)),
+                  y=0.05, vjust=0, hjust=0, nudge_x = 0.2, colour=mycolours[[i]]) +
+        
+        geom_line(data=filter(h, perfstat == myperfstat[[i]]), colour="gray", size=1) +
+        geom_line(colour=mycolours[[i]], size=1) +
+        
+        # vertical lines (periods)
+        geom_vline(data=filter(p, period=="CU"),
+                   aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="ST"),
+        #            aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="MT"),
+        #            aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="LT"),
+        #            aes(xintercept=minyear), linetype="dotted") +
+        # geom_vline(data=filter(p, period=="LT"),
+        #            aes(xintercept=maxyear), linetype="dotted") +
+    
+        expand_limits(y=0) +
+        scale_x_continuous(breaks=seq(min(h$year), max(d$year), 5)) +
+        
+        labs(x="", y = filter(u, perfstat == myperfstat[[i]])$unit2) +
+        {if(i==1 & showtitle==TRUE) labs(title=t)} +
+        
+        facet_wrap( ~ perfstat)
+  
+    } else if (myperfstat[i] %in% c("precbpa")) {
+      
+      print(i)
+           
+      plist[[i]] <-
+        ggplot(data=filter(d, perfstat==myperfstat[[i]]), 
+                   aes(x=year, y=mean, group=perfstat)) +
+        theme_publication() +
+        theme(plot.margin = unit(c(0,0,0,0), "cm")) +
+        theme(legend.position="none") +
+        theme( panel.grid.major.x = element_blank()) +
+        theme(strip.text = element_text(size = 12)) +
+        
+        {if (i == length(myperfstat)) {
+          theme(axis.text.x = element_text(angle = 90, vjust=0.5))
+        } else {
+          theme(axis.text.x = element_blank())
+        } } +
+        
+        geom_vline(data=p2, aes(xintercept=mean), colour=mycolours[[i]], linetype="dashed") +
+        
+        geom_hline(yintercept=0.5, colour="gray", linetype="dashed") +
+        
+        geom_vline(data=filter(p, period=="CU"),
+                   aes(xintercept=minyear), linetype="dotted") +
+        
+        geom_text(data=filter(p2, perfstat %in% c("precbpa")),
+                  aes(x=mean, label=ac(mean)),
+                  y=0.0, vjust=0, hjust=0, nudge_x = 0.2, colour=mycolours[[i]]) +
+    
+        geom_line(colour=mycolours[[i]], size=1) +
+
+        expand_limits(y=0, x=min(p$minyear)) +
+        scale_x_continuous(breaks=seq(min(h$year), max(d$year), 5)) +
+        
+        labs(x="", y = filter(u, perfstat == myperfstat[[i]])$unit2) +
+        # {if(i==1 & showtitle==TRUE) labs(title=t)} +
+        
+        facet_wrap( ~ perfstat)
+
+    } # end of if statements
+  
+  } # end of for loop
+
+print(patchwork::wrap_plots(plist) + 
+  patchwork::plot_layout(ncol = ncolumns) +
+  patchwork::plot_annotation() & theme(plot.tag = element_text(size = 8)))
+
+ggsave(file = file.path(Res.dir,paste0(t," scenarioplot.png")),
+       device="png", width = 30, height = 20, units = "cm")
+
+  
+} # end of function
+
+
+# mystock      =  "WHOM"
+# myassess     = c("SS3", "SAM")
+# myassessyear = c("2022")
+# mymethod     = "EQSIM"
+# myom         = c("OM2.3", "OM2.5")
+# mymp         = c("MP5.23")
+# myperfstat   = c("catch","stock", "fbar", "pblim", "precbpa", "iav")
+# myftgt       = c(0.0, 0.05, 0.074, 0.10, 0.15)
+# myfirstyear  = 2023
+# mylastyear   = 2030
+
+generatetable <- function(
+                    mystock      =  "WHOM",
+                    myassess     = c("SS3", "SAM"),
+                    myassessyear = c("2022"),
+                    mymethod     = "EQSIM",
+                    myom         = c("OM2.3", "OM2.5"),
+                    mymp         = c("MP5.23"),
+                    myperfstat   = c("catch","stock", "fbar", "iav", "pblim", "precbpa"),
+                    myftgt       = c(0.0, 0.05, 0.074, 0.10, 0.15),
+                    myfirstyear  = 2023,
+                    mylastyear   = 2030) {
+  
+  t <-
+    df %>% 
+    filter(mp %in% mymp) %>% 
+    filter(assess %in% myassess) %>%  
+    filter(assessyear %in% myassessyear) %>%  
+    filter(perfstat %in% myperfstat) %>%
+    filter(ftgt %in% myftgt) %>% 
+    filter(year >= myfirstyear) %>%
+    filter(year <= mylastyear) %>% 
+    filter(!is.na(median) | !is.na(mean)) %>%
+    mutate(data = ifelse(is.na(median), mean, median)) %>% 
+    mutate(data = ifelse(perfstat %in% c("catch", "stock"), 1000*data, data))
+
+  d1 <- data.frame(
+          perfstat = c("catch", "stock","fbar", "iav", "pblim", "precbpa"), 
+          round    = c(      0,       0,     2,     2,        2,        2))
+
+  for(tst in myperfstat) {
+    t %>% 
+      filter(perfstat==tst) %>% 
+      reshape2::dcast(assess+assessyear+perfstat+ftgt ~ year, value.var="data", sum, margins=NA) %>% 
+      ungroup() %>% 
+      pander::pandoc.table(., 
+                   style        = "simple",
+                   split.tables = 200, 
+                   split.cells  = c(rep(7,10)),
+                   justify      = "right",
+                   missing      = " ",
+                   big.mark     = ',', 
+                   round        = d1[d1$perfstat==tst,2])
+    
+  }
+  
+
+} # end of generatetable
+
+
+
+
+```
+
+*Working document for NPWG/PELAC 2022*
+
+
+Martin Pastoors, `r format(Sys.time(), '%d/%m/%Y')`
+
+&nbsp;  
+
+**Abstract**
+
+Updating the horse mackerel rebuilding plan analysis, carried out by PELAC and reviewed by ICES in 2021 (WKWHMRP) with the most recent assessments in 2022. 
+
+Comparing SS3 and SAM assessments
+
+\newpage
+
+**Simulation summaries of SSB using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+plotvar(mystock      = "WHOM",
+        myassess     = c("SS3", "SAM"),
+        myassessyear = c("2020", "2022"),
+        mymethod     = c("EQSIM"),
+        myom         = c("OM2.3", "OM2.5"),
+        mymp         = c("MP5.23"),
+        myftgt       = c(0.074),
+        myperfstat   = c("stock"),
+        mycolour     = "red",
+        myyintercept = "blim",
+        myvalue      = "median",
+        myfacets     = c("assess", "assessyear"),
+        myfirstyear  = 2000,
+        scale_y_free = TRUE)
+
+
+```
+_fig 1 Simulation summaries of SSB using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
+
+\newpage
+
+**Simulation summaries of fishing mortality using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+plotvar(mystock      = "WHOM",
+        myassess     = c("SS3", "SAM"),
+        myassessyear = c("2020", "2022"),
+        mymethod     = c("EQSIM"),
+        myom         = c("OM2.3", "OM2.5"),
+        mymp         = c("MP5.23"),
+        myftgt       = c(0.074),
+        myperfstat   = c("fbar"),
+        mycolour     = "blue",
+        myyintercept = "blim",
+        myvalue      = "median",
+        myfacets     = c("assess", "assessyear"),
+        myfirstyear  = 2000,
+        scale_y_free = TRUE)
+
+
+```
+_fig 2 Simulation summaries of fishing mortality using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
+
+\newpage
+
+**Simulation summaries of recruitment using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+plotvar(mystock      = "WHOM",
+        myassess     = c("SS3", "SAM"),
+        myassessyear = c("2020", "2022"),
+        mymethod     = c("EQSIM"),
+        myom         = c("OM2.3", "OM2.5"),
+        mymp         = c("MP5.23"),
+        myftgt       = c(0.074),
+        myperfstat   = c("rec"),
+        mycolour     = "darkgreen",
+        myyintercept = "blim",
+        myvalue      = "median",
+        myfacets     = c("assess", "assessyear"),
+        myfirstyear  = 2000,
+        scale_y_free = TRUE)
+
+
+```
+_fig 3 Simulation summaries of recruitment using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
+
+\newpage
+
+**Simulation summaries of catch using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+plotvar(mystock      = "WHOM",
+        myassess     = c("SS3", "SAM"),
+        myassessyear = c("2020", "2022"),
+        mymethod     = c("EQSIM"),
+        myom         = c("OM2.3", "OM2.5"),
+        mymp         = c("MP5.23"),
+        myftgt       = c(0.074),
+        myperfstat   = c("catch"),
+        mycolour     = "darkred",
+        myyintercept = "blim",
+        myvalue      = "median",
+        myfacets     = c("assess", "assessyear"),
+        myfirstyear  = 2000,
+        scale_y_free = TRUE)
+
+
+```
+
+_fig 4 Simulation summaries of catch using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
+
+\newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+plotpblim (  mystock      = "WHOM",
+             myassess     = c("SS3", "SAM"),
+             myassessyear = c("2020", "2022"),
+             mymethod     = c("EQSIM"),
+             myom         = c("OM2.3", "OM2.5"),
+             mymp         = c("MP5.23"),
+             myftgt       = c(0.074),
+             myfacets     =  c("assess", "assessyear"),
+             myfirstyear  = 2005,
+             mycolour     = "red")
+
+
+```
+
+\newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+
+plotrecovery(mystock      = "WHOM",
+             myassess     = c("SS3", "SAM"),
+             myassessyear = c("2020", "2022"),
+             mymethod     = c("EQSIM"),
+             myom         = c("OM2.3", "OM2.5"),
+             mymp         = c("MP5.23"),
+             myftgt       = c(0.074),
+             myfacets     =  c("assess", "assessyear"),
+             myfirstyear  = 2005,
+             mylastyear   = max(df$year),
+             myintercept  = 0.5)
+
+```
+
+_fig 5 Simulation summaries of recovery to blim or bpa (at least 50% above reference point for 3 subsequent years) using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
+
+\newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+plotscenario (
+    mystock      =  "WHOM",
+    myassess     = "SS3",
+    myassessyear = c("2022"),
+    mymethod     = "EQSIM",
+    myom         = c("OM2.3"),
+    mymp         = c("MP5.23"),
+    myftgt       = c(0.074),
+    myfacets     = c("perfstat"),
+    myfirstyear  = 2000,
+    mylastyear   = as.numeric(NA),
+    myperfstat   = c("stock","fbar", "rec", "catch", "iav", "pblim", "precbpa"),
+    mycolours    = c("blue","red","darkgreen", "brown","blue","red", "black"),
+    ncolumns     = 2)
+
+```
+
+_fig 6 Simulation summaries of several relevant quantities using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from WGWIDE 2022 and SS3 (default assessment)._
+
+\newpage
+
+**Table 1: summary of SS3 2022 simulation results at Ftgt=0.074**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.55, message=FALSE, warning=FALSE}
+
+
+generatetable (mystock      =  "WHOM",
+               myassess     = c("SS3"),
+               myassessyear = c("2022"),
+               mymethod     = "EQSIM",
+               myom         = c("OM2.3"),
+               mymp         = c("MP5.23"),
+               myperfstat   = c("catch","stock", "fbar", "pblim", "precbpa"),
+               myftgt       = c(0.001, 0.05, 0.074, 0.10, 0.15),
+               myfirstyear  = 2023,
+               mylastyear   = 2030) 
+
+```
+
+\newpage
+
+**Table 2: summary of SAM 2022 simulation results at Ftgt=0.074**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.55, message=FALSE, warning=FALSE}
+
+
+generatetable (mystock      =  "WHOM",
+               myassess     = c("SAM"),
+               myassessyear = c("2022"),
+               mymethod     = "EQSIM",
+               myom         = c("OM2.5"),
+               mymp         = c("MP5.23"),
+               myperfstat   = c("catch","stock", "fbar", "pblim", "precbpa"),
+               myftgt       = c(0.001, 0.05, 0.074, 0.10, 0.15),
+               myfirstyear  = 2023,
+               mylastyear   = 2030) 
+
+
+```
+
