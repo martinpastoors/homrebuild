@@ -80,7 +80,7 @@ for (i in 1:length(file.list)) {
                     
 }
 
-loadRData(file.list[3])[["df"]] %>% View()
+# loadRData(file.list[3])[["df"]] %>% View()
 
 
 
@@ -982,13 +982,62 @@ Martin Pastoors, `r format(Sys.time(), '%d/%m/%Y')`
 
 **Abstract**
 
-Updating the horse mackerel rebuilding plan analysis, carried out by PELAC and reviewed by ICES in 2021 (WKWHMRP) with the most recent assessments in 2022. 
+[to be expanded]
 
-Comparing SS3 and SAM assessments
+* Process: updating the MSE approach from PELAC 2020/WKWHMRP 2021 to start with WGWIDE 2022 assessment
+* Comparison between SS3 and SAM assessments
+* Starting with recovery plan TAC in 2023 (15 kT); afterwards slow increase of TACs due to TAC constraint when stock is above Bpa
+* Recovery time with F target=0.074 and SS3 assessment is above 10 years (2035). With SAM assessments, recovery is expected to occur by 2028.  
 
 \newpage
 
-**Simulation summaries of SSB using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
+#Introduction
+
+During 2020, a group of experts associated with the Pelagic Advisory Council (PELAC) developed an evaluation of a potential rebuilding plan for Western Horse mackerel (Pastoors et al., 2020). The development of the rebuilding plan was instigated by the PELAC to address the SSB estimates of the stock that were hovering just above Blim following the reference points interbenchmark in 2019 (ICES 2019) and the WGWIDE assessment in 2020 (ICES 2020). The evaluation was submitted to ICES for scientific review by the European Commission. ICES then convened the WKWHMRP to carry out the scientific review (ICES 2021a) which resulted in an ICES advice in April 2021 (ICES 2021a). ICES concluded that "the evaluated rebuilding plan as proposed by PELAC shows potential to reach the specified target (three consecutive years > Bpa) within the time frame specified in the plan (< ten years) and is considered to be precautionary in the long term.". 
+
+During the annual advice cycle in 2021, the PELAC rebuilding plan option was included in the options table for western horse mackerel, although the headline advice was still based on the ICES MSY approach, because the rebuilding plan had not been adopted by all relevant member states. During the TAC setting discussions between EU and UK, the TAC for Western horse mackerel for 2022 was set on the basis of the ICES MSY advice and not on the proposed rebuilding plan. 
+
+At the WGWIDE 2022 group, the assessment of western horse mackerel indicated that the stock was now below Blim (due to a retrospective downward revision of the assessment over many years). The stock could not be rebuilt to Blim within the two years of the short term forecast, and therefore ICES recommended a zero catch for Western horse mackerel in 2023. ICES also included the PELAC rebuilding plan option in the forecast table, which would result in a TAC of 15513 tonnes in 2023. 
+
+A comparison of the PELAC recommended rebuilding plan and the ICES MSY Advice rule is presented in the figure below. Here the ICES MSY advice rule has been interpreted in a strict sense, meaning that the recommended F is decreased from a relatively high value just above Blim to zero when the stock is below Blim. In contrast, the PELAC recommended rebuilding plan has a much stronger decrease in F between MSY Btrigger and Blim, and a continued, low fishing mortality when the stock is below Blim. In addition, the rebuilding plan as a 20% constraint on TAC changes when the stock is above MSY Btrigger.   
+
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.4, message=FALSE, warning=FALSE}
+
+readxl::read_excel("C:/DATA/GIT/homrebuild/data/hcr_types v2.xlsx")  %>% 
+  mutate(scenario=factor(scenario, levels=c("ICES AR", "Double BP + IAV"))) %>% 
+  
+  ggplot(aes(x=ssb,y=f, group=scenario)) +
+  theme_publication() +
+  theme(panel.grid.major = element_blank()) +
+  theme(legend.position = "none") +
+  geom_vline(xintercept=834, colour = "darkgray", linetype="dotted", size=0.6) +
+  geom_vline(xintercept=1168, colour = "darkgray", linetype="dotted", size=0.6) +
+  geom_hline(yintercept=0.074, colour = "darkgray", linetype="dotted", size=0.6) +
+  geom_ribbon(aes(fill=scenario, ymin=flow, ymax=fupp), alpha=0.3) +
+  geom_line(aes(colour=scenario), size=1) +
+  # scale_linetype(c("solid","dashed")) +
+  expand_limits(y=0) +
+  guides(linetype=FALSE) +
+  facet_wrap(~scenario)
+
+```
+
+Following the release of the ICES advice, and in consultation with several members of the PELAC, a part of the MSE analysis that was done in the initial evaluation of the rebuilding plan, has been repeated in the current working documents. It provides an update of the MSE evaluations using either the SS3 model (the model used by WGWIDE for western horse mackerel) or the SAM model (used as exploratory assessment in WGWIDE) and using the preferred rebuidling plan option: double breakpoint rule (target fishing mortality at Fmsy=0.074, breakpoint at MSY Btrigger and straight decline in F to 20% of Ftarget at Blim. Below Blim continued fishing at F = 0.2 * Ftarget). Results are presented in this working document in comparison with the results obtained presented in WKWHMRP 2021 for the preferred rebuilding plan options. 
+
+The code used to carry out the MSE process, was the same code as used in 2020 but updated to take into account the assessments as carried out during WGWIDE 2022 (for code, see: https://github.com/martinpastoors/homrebuild). No assessment or forecast is conducted during the simulations i.e. this is a ‘short-cut’ MSE approach. The parameterisation of uncertainty in observed SSB and F are incorporated into the simulations following the methodology developed for EqSim whereby SSB and FBar outputs from historic assessments and short term forecasts are compared to the most recent assessment and described via a pair of parameters (CV and autocorrelation) for each of SSB and FBar. These parameters are then used to generate an error and derived “observed” values of SSB and Fbar for the management procedure (Pastoors 2020). 
+
+All simulations based on the WGWIDE 2022 data are based on the assumption that the TAC in 2022 will be taken and that the TAC in 2023 will be set on the basis of the rebuilding plan (15513 tonnes). 
+ 
+
+#Results
+
+Results are presented for MSEs that are either based on the WGWIDE 2020 or WGWIDE 2022 assessments of western horse mackerel, and using either the SS3 assessment model (which is the basis for the ICES advice) or the SAM model (which is used as exploratory assessment in WGWIDE). The results based on WGWIDE 2020 are identical to the results that were presented to WKWHMRP 2021 (ICES 2021a). The results based on WGWIDE 2022 and new and presented here for the first time. The target fishing mortality in the simulations is 0.074 (=Fmsy). 
+
+Figures 1-4 contain the historical patterns and the simulated results for SSB, fishing mortality, recruitment and catch. The development of stock in both the SS3 and SAM evaluations indicate that the stock is expected to increase from the lowest biomass around 2018-2018.
+
+The scenarios presented all have a target fishing mortality of 0.074 (Fmsy). However, this is not achieved, especially in the cases when the 2022 assessments are used. This is because the simulations start with a TAC of 15 kT, and subsequently, when the stock is estimated above MSY Btrigger, the change in TAC is limited to 20%. This means that the maximum increase in TAC is limiting the realised fishing mortality. 
+
 
 ```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
 
@@ -1009,11 +1058,8 @@ plotvar(mystock      = "WHOM",
 
 
 ```
+
 _fig 1 Simulation summaries of SSB using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
-
-\newpage
-
-**Simulation summaries of fishing mortality using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
 
 ```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
 
@@ -1034,11 +1080,10 @@ plotvar(mystock      = "WHOM",
 
 
 ```
+
 _fig 2 Simulation summaries of fishing mortality using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
 
 \newpage
-
-**Simulation summaries of recruitment using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
 
 ```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
 
@@ -1061,9 +1106,6 @@ plotvar(mystock      = "WHOM",
 ```
 _fig 3 Simulation summaries of recruitment using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
 
-\newpage
-
-**Simulation summaries of catch using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment).**
 
 ```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
 
@@ -1089,6 +1131,10 @@ _fig 4 Simulation summaries of catch using MP5.23 (double breakpoint F with 20% 
 
 \newpage
 
+**Probability of being below Blim**
+
+The probability of being below Blim is an important criteria for the assessment of the precautionary nature of management actions and long term plans. When the probability of being below Blim is less than 5%, this is considered in accordance with the precautionary approach. With the 2022 assessments, the probability of being below Blim is decreasing. The expected year when the 5% probability would be achieved with the SS3 assessment is substantially futher into the future.
+
 ```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
 
 plotpblim (  mystock      = "WHOM",
@@ -1105,7 +1151,15 @@ plotpblim (  mystock      = "WHOM",
 
 ```
 
+_fig 5 Simulation summaries of probability of being below blim using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
+
 \newpage
+
+**Probability of rebuilding to MSY Btrigger (Bpa)**
+
+The probability of rebuilding to MSY Btrigger (Bpa) is defined as 50% of the simulations being above MSY Btrigger for at least 3 subsequent years. 
+
+For the SS3 assessment, the year of rebuilding to Bpa would extended from 2018 to 2035, while for the SAM assessment this is from 2025 to 2028. The difference between SS3 and SAM is generally that the SS3 assessment gives a somewhat more pessimistic stock development trajectory compared to the SAM assessment (note that the SAM assessment does not estimate the stock to be below Blim in 2022). 
 
 ```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
 
@@ -1124,9 +1178,13 @@ plotrecovery(mystock      = "WHOM",
 
 ```
 
-_fig 5 Simulation summaries of recovery to blim or bpa (at least 50% above reference point for 3 subsequent years) using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
+_fig 6 Simulation summaries of recovery to blim or bpa (at least 50% above reference point for 3 subsequent years) using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from either WGWIDE 2020 or WGWIDE 2022 and either SS3 (default assessment) or SAM (exploratory assessment)._
 
 \newpage
+
+**Summary**
+
+A summary of the SS3 run with target F = 0.074 is shown in Figure 7 and Table 1. 
 
 ```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
 
@@ -1147,7 +1205,7 @@ plotscenario (
 
 ```
 
-_fig 6 Simulation summaries of several relevant quantities using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from WGWIDE 2022 and SS3 (default assessment)._
+_fig 7 Simulation summaries of several relevant quantities using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from WGWIDE 2022 and SS3 (default assessment)._
 
 \newpage
 
@@ -1169,6 +1227,32 @@ generatetable (mystock      =  "WHOM",
 
 ```
 
+
+\newpage
+
+A summary of the SAM run with target F = 0.074 is shown in Figure 8 and Table 2. 
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+plotscenario (
+    mystock      =  "WHOM",
+    myassess     = "SAM",
+    myassessyear = c("2022"),
+    mymethod     = "EQSIM",
+    myom         = c("OM2.5"),
+    mymp         = c("MP5.23"),
+    myftgt       = c(0.074),
+    myfacets     = c("perfstat"),
+    myfirstyear  = 2000,
+    mylastyear   = as.numeric(NA),
+    myperfstat   = c("stock","fbar", "rec", "catch", "iav", "pblim", "precbpa"),
+    mycolours    = c("blue","red","darkgreen", "brown","blue","red", "black"),
+    ncolumns     = 2)
+
+```
+
+_fig 8 Simulation summaries of several relevant quantities using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from WGWIDE 2022 and SAM (exploratory assessment)._
+
 \newpage
 
 **Table 2: summary of SAM 2022 simulation results at Ftgt=0.074**
@@ -1189,4 +1273,28 @@ generatetable (mystock      =  "WHOM",
 
 
 ```
+
+
+#Discussion and conclusions
+
+[to be expanded]
+
+* Process: updating the MSE approach from PELAC 2020/WKWHMRP 2021 to start with WGWIDE 2022 assessment
+* Comparison between SS3 and SAM assessments
+* Starting with recovery plan TAC in 2023 (15 kT); afterwards slow increase of TACs due to TAC constraint when stock is above Bpa
+* Recovery time with F target=0.074 and SS3 assessment is above 10 years (2035). With SAM assessments, recovery is expected to occur by 2028.  
+
+#References
+
+ICES. 2019. Interbenchmark Protocol on reference points for western horse mackerel (Trachurus trachurus) in subarea 8 and divisions 2.a, 4.a, 5.b, 6.a, 7.a-c,e-k (the Northeast Atlantic) (IBPWHM). ICES VOLUME 2 | ISSUE 95.
+
+ICES. 2020. Working Group on Widely Distributed Stocks (WGWIDE 2020) Volume 2, Issue 82.
+
+ICES (2021a). Workshop for the review of the assessment of a new rebuilding plan for western horse mackerel (WKWHMRP). ICES Scientific Reports. Copenhagen, ICES. Volume 3, Issue 37: 239 pp.
+
+ICES (2021b). EU request to ICES on the assessment of a new rebuilding plan for western horse mackerel (Trachurus trachurus) in ICES Subarea 8 and divisions 2.a, 4.a, 5.b, 6.a, 7.a–c, and 7.e–k.In: ICES Special Request Advice, Ecoregions in the Northeast Atlantic sr.2021.04 (26 April 2021).
+
+Pastoors, M. A., Campbell, A., Trijoulet, V., Skagen, D., Gras, M., Lambert, G., Sparrevohn, C. R., et al. 2020. Western Horse Mackerel Technical Focus Group on Harvest Control Rule Evaluations 2020. 43 pp pp.
+
+Pastoors, M. A., A. Campbell, V. Trijoulet, M. Gras, G. Lambert, C. R. Sparrevohn, S. Mackinson and R. Ourens (2021). Updated diagnostics and simulations of the western horse mackerel rebuilding plan evaluations, ICES. Working document 01, WKWHMRP 2021: 97 pp.
 

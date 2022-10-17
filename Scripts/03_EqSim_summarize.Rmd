@@ -31,9 +31,9 @@ library(tidyverse)
 Base.dir <- dirname(getwd())
 MSE.dir   <- file.path(Base.dir, "Scripts")
 Data.dir  <- file.path(Base.dir,"data")              
-RData.dir <- "C:/TEMP/WHOM_2022/run"
+RData.dir <- Data.dir
 Res.dir   <- file.path(Base.dir, "Results")
-stats.dir <- file.path(Res.dir, "Stats")
+stats.dir <- Res.dir
 
 Source.dir <- file.path(Base.dir,"R")              #R functions
 source(file.path(Source.dir,"utilities.R"))
