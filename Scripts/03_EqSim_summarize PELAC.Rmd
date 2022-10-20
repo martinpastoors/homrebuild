@@ -982,16 +982,23 @@ Martin Pastoors, `r format(Sys.time(), '%d/%m/%Y')`
 
 **Abstract**
 
-[to be expanded]
+During 2020 and 2021, an evaluation of a potential rebuilding plan for Western Horse mackerel was carried out and reviewed by ICES. ICES concluded that "the evaluated rebuilding plan as proposed by PELAC shows potential to reach the specified target (three consecutive years > Bpa) within the time frame specified in the plan (< ten years) and is considered to be precautionary in the long term.". Although the PELAC rebuilding plan option was subsequently included in the ICES options table for western horse mackerel in 2021, the TAC setting for 2022 was based on the ICES MSY advice and not on the proposed rebuilding plan. 
 
-* Process: updating the MSE approach from PELAC 2020/WKWHMRP 2021 to start with WGWIDE 2022 assessment
-* Comparison between SS3 and SAM assessments
-* Starting with recovery plan TAC in 2023 (15 kT); afterwards slow increase of TACs due to TAC constraint when stock is above Bpa
-* Recovery time with F target=0.074 and SS3 assessment is above 10 years (2035). With SAM assessments, recovery is expected to occur by 2028.  
+At WGWIDE 2022 group, the assessment of western horse mackerel indicated that the stock was now below Blim and the stock could not be rebuilt to Blim within the two years of the short term forecast. Therefore ICES recommended a zero catch for Western horse mackerel in 2023. ICES also included the PELAC rebuilding plan option in the forecast table (15513 tonnes in 2023). 
+
+This document provides an update of the MSE evaluations from 2020-2021 using the results of WGWIDE 2022 and either the SS3 model or the SAM model and using the preferred rebuidling plan option: double breakpoint rule (target fishing mortality at Fmsy=0.074, breakpoint at MSY Btrigger and straight decline in F to 20% of Ftarget at Blim. Below Blim continued fishing at F = 0.2 * Ftarget). Results are presented in this working document in comparison with the results obtained presented in WKWHMRP 2021 for the preferred rebuilding plan options. All simulations based on the WGWIDE 2022 data are based on the assumption that the TAC in 2022 will be taken and that the TAC in 2023 will be set on the basis of the rebuilding plan (15513 tonnes).
+
+The code used to carry out the MSE process, was the same code as used in 2020 but updated to take into account the assessments as carried out during WGWIDE 2022 (see: https://github.com/martinpastoors/homrebuild).  
+
+The rebuilding potential from the SS3 assessment of WGWIDE 2022 is substantially slower compared to the rebuilding potential that was estimated from the 2020 assessment. This is likely caused by the stock being estimated to be lower over a long number of years and in recent years also below Blim. Rebuilding the stock to MSY Btrigger for at least 3 years in a row and for at least 50% of the simulations is now expected to take until 2035 while in the previous evaluation this was 2028. 
+
+The estimated starting conditions and rebuilding period for the SAM assessment of WGWIDE 2022 is also a bit longer compared to the 2020 assessment. The new evaluation estimates rebuilding in year 2028 while in the 2020 evaluation this was in 2025. 
+
+In both evaluations (SS3 and SAM) the target fishing mortality of the rebuilding plan (0.074) are not achieved in the simulations, due to the constraints on TAC variation that applies when the stock is above MSY Btrigger. The low starting TAC for the simulations (15513 tonnes for 2023) also affect this behavior. 
 
 \newpage
 
-#Introduction
+# Introduction
 
 During 2020, a group of experts associated with the Pelagic Advisory Council (PELAC) developed an evaluation of a potential rebuilding plan for Western Horse mackerel (Pastoors et al., 2020). The development of the rebuilding plan was instigated by the PELAC to address the SSB estimates of the stock that were hovering just above Blim following the reference points interbenchmark in 2019 (ICES 2019) and the WGWIDE assessment in 2020 (ICES 2020). The evaluation was submitted to ICES for scientific review by the European Commission. ICES then convened the WKWHMRP to carry out the scientific review (ICES 2021a) which resulted in an ICES advice in April 2021 (ICES 2021a). ICES concluded that "the evaluated rebuilding plan as proposed by PELAC shows potential to reach the specified target (three consecutive years > Bpa) within the time frame specified in the plan (< ten years) and is considered to be precautionary in the long term.". 
 
@@ -1030,7 +1037,7 @@ The code used to carry out the MSE process, was the same code as used in 2020 bu
 All simulations based on the WGWIDE 2022 data are based on the assumption that the TAC in 2022 will be taken and that the TAC in 2023 will be set on the basis of the rebuilding plan (15513 tonnes). 
  
 
-#Results
+# Results
 
 Results are presented for MSEs that are either based on the WGWIDE 2020 or WGWIDE 2022 assessments of western horse mackerel, and using either the SS3 assessment model (which is the basis for the ICES advice) or the SAM model (which is used as exploratory assessment in WGWIDE). The results based on WGWIDE 2020 are identical to the results that were presented to WKWHMRP 2021 (ICES 2021a). The results based on WGWIDE 2022 and new and presented here for the first time. The target fishing mortality in the simulations is 0.074 (=Fmsy). 
 
@@ -1275,16 +1282,290 @@ generatetable (mystock      =  "WHOM",
 ```
 
 
-#Discussion and conclusions
+# Discussion and conclusions
 
-[to be expanded]
+During 2020 and 2021, an evaluation of a potential rebuilding plan for Western Horse mackerel was carried out and reviewed by ICES. ICES concluded that "the evaluated rebuilding plan as proposed by PELAC shows potential to reach the specified target (three consecutive years > Bpa) within the time frame specified in the plan (< ten years) and is considered to be precautionary in the long term.". Although the PELAC rebuilding plan option was subsequently included in the ICES options table for western horse mackerel in 2021, the TAC setting for 2022 was based on the ICES MSY advice and not on the proposed rebuilding plan. 
 
-* Process: updating the MSE approach from PELAC 2020/WKWHMRP 2021 to start with WGWIDE 2022 assessment
-* Comparison between SS3 and SAM assessments
-* Starting with recovery plan TAC in 2023 (15 kT); afterwards slow increase of TACs due to TAC constraint when stock is above Bpa
-* Recovery time with F target=0.074 and SS3 assessment is above 10 years (2035). With SAM assessments, recovery is expected to occur by 2028.  
+At WGWIDE 2022 group, the assessment of western horse mackerel indicated that the stock was now below Blim and the stock could not be rebuilt to Blim within the two years of the short term forecast. Therefore ICES recommended a zero catch for Western horse mackerel in 2023. ICES also included the PELAC rebuilding plan option in the forecast table (15513 tonnes in 2023). 
 
-#References
+This document provides an update of the MSE evaluations from 2020-2021 using the results of WGWIDE 2022 and either the SS3 model or the SAM model and using the preferred rebuidling plan option: double breakpoint rule (target fishing mortality at Fmsy=0.074, breakpoint at MSY Btrigger and straight decline in F to 20% of Ftarget at Blim. Below Blim continued fishing at F = 0.2 * Ftarget). Results are presented in this working document in comparison with the results obtained presented in WKWHMRP 2021 for the preferred rebuilding plan options. All simulations based on the WGWIDE 2022 data are based on the assumption that the TAC in 2022 will be taken and that the TAC in 2023 will be set on the basis of the rebuilding plan (15513 tonnes).
+
+The code used to carry out the MSE process, was the same code as used in 2020 but updated to take into account the assessments as carried out during WGWIDE 2022 (see: https://github.com/martinpastoors/homrebuild).  
+
+The rebuilding potential from the SS3 assessment of WGWIDE 2022 is substantially slower compared to the rebuilding potential that was estimated from the 2020 assessment. Rebuilding the stock to MSY Btrigger for at least 3 years in a row and for at least 50% of the simulations is now expected to take until 2035 while in the previous evaluation this was 2028. 
+
+The estimated starting conditions and rebuilding period for the SAM assessment of WGWIDE 2022 is also a bit longer compared to the 2020 assessment. The new evaluation estimates rebuilding in year 2028 while in the 2020 evaluation this was in 2025. 
+
+The reason that the simulations using the 2022 assessments are different from the simulations from the 2020 assessment is largely in relation to the biomass at the start of the simulation period relative to the reference points Blim and Bpa. Figures 9 and 10 show the biomass trends from the assessments and simulated periods relative to Blim and Bpa. The 2022 SAM assessment estimates the SSB to be between Blim and Bpa at the start of the simulation period, whereas the SS3 assessment estimates the SSB to be below Blim. 
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+t <-
+  df %>% 
+  filter(perfstat=="stock", ftgt==0.074) %>%
+  filter(year >= 2000) %>% 
+  filter(mp == "MP5.23") %>% 
+  mutate(assess = factor(assess, levels=c("SS3", "SAM"))) %>% 
+  drop_na(median) %>% 
+  dplyr::select(stock, assess, assessyear, period, year, lower, median, upper, blim, bpa) %>% 
+  tidyr::pivot_longer(names_to = "estimate", values_to = "data", c("lower", "median", "upper")) %>% 
+  mutate(rel_blim = data/blim) %>% 
+  mutate(rel_bpa  = data/bpa) %>% 
+  dplyr::select(-bpa, -blim, -data) %>% 
+  tidyr::pivot_longer(names_to = "variable", values_to = "data", c("rel_blim", "rel_bpa")) %>% 
+  tidyr::pivot_wider(names_from = estimate, values_from = data)
+  # View()
+
+p <-
+  t %>% 
+  distinct(assessyear, period, year) %>% 
+  
+  group_by(assessyear, period) %>% 
+  summarise(
+    minyear = min(year),
+    maxyear = max(year)
+  )
+  
+
+t %>% 
+  filter(variable == "rel_blim") %>% 
+  
+  ggplot(aes(x=year, y=median)) +
+  theme_publication() +
+  theme( panel.grid.major.x = element_blank()) +
+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.4, fill="gray") +
+  geom_line(aes(y=lower), colour="darkgray") +
+  geom_line(aes(y=upper), colour="darkgray") +
+  
+  geom_line(size=1) +
+  geom_hline(yintercept=1, colour="red", linetype="dashed") +
+  
+  # vertical lines (periods)
+  geom_vline(data=filter(p, period=="CU"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="ST"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="MT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=maxyear), linetype="dotted") +
+    
+  labs(y="SSB/Blim", x="", title="SSB relative to Blim") +
+  facet_grid(assess ~ assessyear)
+
+```
+
+_fig 9 Simulation summaries of SSB relative to Blim using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from SS3 and SAM assessments._
+
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+# data processing in previous chunk
+
+t %>% 
+  filter(variable == "rel_bpa") %>% 
+  
+  ggplot(aes(x=year, y=median)) +
+  theme_publication() +
+  theme( panel.grid.major.x = element_blank()) +
+  
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.4, fill="gray") +
+  geom_line(aes(y=lower), colour="darkgray") +
+  geom_line(aes(y=upper), colour="darkgray") +
+  
+  geom_line(size=1) +
+  
+  # vertical lines (periods)
+  geom_vline(data=filter(p, period=="CU"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="ST"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="MT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=maxyear), linetype="dotted") +
+  
+  geom_hline(yintercept=1, colour="red", linetype="dashed") +
+  labs(y="SSB/Bpa", x="", title="SSB relative to Bpa") +
+  facet_grid(assess ~ assessyear)
+
+
+```
+
+_fig 10 Simulation summaries of SSB relative to Bpa using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from SS3 and SAM assessments._
+
+\newpage
+
+Figure 11 shows the fishing mortality from the assessment and forward simulation (in red) against the fishing mortality that would result from the application of the F-rule within the HCR (in gray). 
+
+The performance of the Double breakpoint HCR rule with contraint on interannual variation in TACs (20%) above MSY Btrigger is strongly influenced by the starting conditions (TAC and SSB in the first year) of the simulations. In this evaluation, we assumed that the TAC for 2023 would be set at 15513 tonnes, in line with the application of the rebuilding plan and the ICES forecast table. Below MSY Btrigger there are no constraints on the changes in TAC, but the target F is sharply reduced between MSY Btrigger and Blim in accordance with the HCR. If the stock were to be estimated above MSY Btrigger, the constraint on changes in TAC kicks in. 
+
+For the SAM simulations, the median estimates of SSB are between Blim and MSY Btrigger at the start of the simulation (Figures 9 and 10). Therefore, the fishing mortalities during the rebuilding period are mostly determined by the F-rule. Once the SSB is estimated above MSY Btrigger, the TAC is not just determined by the F-rule but also by the constraint on TAC (increase). Because, SSB reaches MSY Btrigger relatively quickly in the SAM simulations, this causes the realised F to be substantially below the target F, simply because the catch is constrained by the TAC constraint.   
+
+For the SS3 simulations, the stock is estimated to remain below Blim for some time, leading to the application of Flow (Ftarget/5) for those years. When the stock is between Blim and MSY Btrigger, the realised F is slowly increasing with the slow rebuilding of the stock. As with the SAM simulations, the SS3 simulations lead to a lower realised fishing mortality compared to the target F. 
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+t <-
+  df %>% 
+  filter(perfstat=="stock", ftgt==0.074, ) %>%
+  filter(year >= 2000) %>% 
+  filter(mp == "MP5.23") %>% 
+  mutate(assess = factor(assess, levels=c("SS3", "SAM"))) %>% 
+  drop_na(median) %>% 
+  dplyr::select(stock, assess, assessyear, ftgt, period, year, lower, median, upper, blim, bpa) %>% 
+  tidyr::pivot_longer(names_to = "estimate", values_to = "data", c("lower", "median", "upper")) %>% 
+  mutate(ftgt = as.numeric(ftgt)) %>% 
+  mutate(fhcr = ftgt/5) %>% 
+  mutate(fhcr = ifelse(data >  blim & data <= bpa, 
+                       ftgt/5 + (data - blim)/(bpa-blim) * (ftgt-ftgt/5), fhcr)) %>% 
+  mutate(fhcr = ifelse(data >= bpa, ftgt, fhcr)) %>% 
+  dplyr::select(-bpa, -blim, -data) %>% 
+  tidyr::pivot_wider(names_from = estimate, values_from = fhcr)
+  # View()
+
+t2 <-
+  df %>% 
+  mutate(assess = factor(assess, levels=c("SS3", "SAM"))) %>% 
+  filter(perfstat=="fbar", ftgt==0.074) %>%
+  filter(year >= 2000) %>% 
+  filter(mp == "MP5.23") %>% 
+  drop_na(median) 
+
+p <-
+  t %>% 
+  distinct(assessyear, period, year) %>% 
+  
+  group_by(assessyear, period) %>% 
+  summarise(
+    minyear = min(year),
+    maxyear = max(year)
+  )
+  
+
+t %>% 
+  ggplot(aes(x=year, y=median)) +
+  theme_publication() +
+  theme( panel.grid.major.x = element_blank()) +
+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.4, fill="gray") +
+  geom_line(aes(y=lower), colour="darkgray") +
+  geom_line(aes(y=upper), colour="darkgray") +
+  
+  geom_line(size=1) +
+
+  geom_ribbon(data=t2, aes(ymin=lower, ymax=upper), alpha=0.2, fill="red") +
+  geom_line(data=t2, aes(x=year, y=median), colour="red") +
+  
+  # vertical lines (periods)
+  geom_vline(data=filter(p, period=="CU"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="ST"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="MT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=maxyear), linetype="dotted") +
+    
+  labs(y="F HCR", x="", title="F according to F-rule (gray) and realized (red)") +
+  expand_limits(y=0) +
+  facet_grid(assess ~ assessyear)
+
+
+```
+
+
+_fig 11 Simulation summaries of fishing mortality from assessment and simulation (red) and from application of the F-rule within the HCR (gray) using MP5.23 (double breakpoint F with 20% IAV constraint above Btrigger) at F=0.074 (Fmsy) from SS3 and SAM assessments._
+
+\newpage
+
+In order to check the behaviour of the IAV constraint in the HCR, the SAM 2022 simulation was rerun with Management Procedure 5.20 (double breakpoint HCR, without IAV constraint above MSY Btrigger, Figure 12). Results indicate that, indeed, the IAV constraint limits the increase in TAC from a low level, thereby leading to a low realised fishing mortality (and a faster increase in stock size).   
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.9, message=FALSE, warning=FALSE}
+
+t <-
+  df %>% 
+  filter(perfstat=="stock", ftgt==0.074) %>%
+  filter(year >= 2000) %>% 
+  filter(assessyear==2022) %>% 
+  mutate(assess = factor(assess, levels=c("SS3", "SAM"))) %>%
+  drop_na(median) %>% 
+  mutate(assessmp = paste(assess, mp, sep="_")) %>% 
+  dplyr::select(stock, assess, assessyear, mp, assessmp, ftgt, period, year, lower, median, upper, blim, bpa) %>% 
+  tidyr::pivot_longer(names_to = "estimate", values_to = "data", c("lower", "median", "upper")) %>% 
+  mutate(ftgt = as.numeric(ftgt)) %>% 
+  mutate(fhcr = ftgt/5) %>% 
+  mutate(fhcr = ifelse(data >  blim & data <= bpa, 
+                       ftgt/5 + (data - blim)/(bpa-blim) * (ftgt-ftgt/5), fhcr)) %>% 
+  mutate(fhcr = ifelse(data >= bpa, ftgt, fhcr)) %>% 
+  dplyr::select(-bpa, -blim, -data) %>% 
+  tidyr::pivot_wider(names_from = estimate, values_from = fhcr)
+  # View()
+
+t2 <-
+  df %>% 
+  mutate(assess = factor(assess, levels=c("SS3", "SAM"))) %>%
+  filter(perfstat=="fbar", ftgt==0.074) %>%
+  filter(year >= 2000) %>% 
+  filter(assessyear==2022) %>% 
+  # filter(assess=="SAM") %>% 
+  mutate(assessmp = paste(assess, mp, sep="_")) %>% 
+  drop_na(median) 
+
+p <-
+  t %>% 
+  distinct(assessyear, period, year) %>% 
+  
+  group_by(assessyear, period) %>% 
+  summarise(
+    minyear = min(year),
+    maxyear = max(year)
+  )
+  
+t %>% 
+  ggplot(aes(x=year, y=median)) +
+  theme_publication() +
+  theme( panel.grid.major.x = element_blank()) +
+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.4, fill="gray") +
+  geom_line(aes(y=lower), colour="darkgray") +
+  geom_line(aes(y=upper), colour="darkgray") +
+  
+  geom_line(size=1) +
+
+  geom_ribbon(data=t2, aes(ymin=lower, ymax=upper), alpha=0.2, fill="red") +
+  geom_line(data=t2, aes(x=year, y=median), colour="red") +
+  
+  # vertical lines (periods)
+  geom_vline(data=filter(p, period=="CU"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="ST"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="MT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=minyear), linetype="dotted") +
+  geom_vline(data=filter(p, period=="LT"),
+             aes(xintercept=maxyear), linetype="dotted") +
+    
+  labs(y="F HCR", x="", title="2022 assessment: F according to F-rule (gray) and realized (red) without (MP5.20) and with (MP5.23) TAC constraint") +
+  expand_limits(y=0) +
+  facet_grid(assess ~ mp)
+
+
+```
+
+_fig 12 Simulation summaries of 2022 assessments for fishing mortality from assessment and simulation (red) and from application of the F-rule within the double breakpoint HCR (gray) without IAV constraint (MP5.20) and with IAV constraint (MP5.23) at F=0.074 (Fmsy)._
+
+
+# References
 
 ICES. 2019. Interbenchmark Protocol on reference points for western horse mackerel (Trachurus trachurus) in subarea 8 and divisions 2.a, 4.a, 5.b, 6.a, 7.a-c,e-k (the Northeast Atlantic) (IBPWHM). ICES VOLUME 2 | ISSUE 95.
 

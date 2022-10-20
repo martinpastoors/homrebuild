@@ -13,7 +13,7 @@
 # 01/07/2020 included additional features by Martin Pastoors
 # ================================================================================================================
 
-# source("Scripts/01_EqSim_setup.R")
+source("Scripts/01_EqSim_setup.R")
 
 #Note: niters and nyr could be included in the OM or MP definitions
 
@@ -34,20 +34,20 @@ rebuiltThreshold <- 0.5
 # set up the OM =========================================================================================================
 
 # WHOM SS 2022
-# stock          <- "WHOM"
-# assess         <- "SS"
-# assessyear     <- "2022"
-# FLStockfile    <- "WHOM_SS22_FLS_WGWIDE.RData"
-# FLStockSimfile <- "WHOM_SS22_FLSs_Clean.RData"
-# OM             <- OM2.3    #WGWIDE SS 2022, stochastic weights, selection
+stock          <- "WHOM"
+assess         <- "SS"
+assessyear     <- "2022"
+FLStockfile    <- "WHOM_SS22_FLS_WGWIDE.RData"
+FLStockSimfile <- "WHOM_SS22_FLSs_Clean.RData"
+OM             <- OM2.3    #WGWIDE SS 2022, stochastic weights, selection
 
 # WHOM SAM 2022
-stock          <- "WHOM"
-assess         <- "SAM"
-assessyear     <- "2022"
-FLStockfile    <- "WHOM_SAM22_FLS_WGWIDE.RData"
-FLStockSimfile <- "WHOM_SAM22_FLSs_converged.RData"
-OM             <- OM2.5                         #WGWIDE SAM 2022, stochastic weights, selection
+# stock          <- "WHOM"
+# assess         <- "SAM"
+# assessyear     <- "2022"
+# FLStockfile    <- "WHOM_SAM22_FLS_WGWIDE.RData"
+# FLStockSimfile <- "WHOM_SAM22_FLSs_converged.RData"
+# OM             <- OM2.5                         #WGWIDE SAM 2022, stochastic weights, selection
 
 # C:\TEMP\WHOM_2022\run
 #assessment FLStock
@@ -109,7 +109,7 @@ worms      <- c(1,sample(seq(2,niters),numWorm))
 
 # Loop over management procedures
 
-mp <- c("MP5.23")
+mp <- c("MP5.20")
 # for (mp in c("MP5.23")) {
 
   # for (mp in c("MP5.23.DU")) {

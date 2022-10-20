@@ -395,10 +395,16 @@ Extreme.zeroCor <- list("cvF" = 0.7, "phiF" = 0, "cvSSB" = 0.7, "phiSSB" = 0)
 # Double BP
 # ===========================================================================
 
-# MP5.20 <- list("code" = "MP5.20", "desc" = "Double BP HCR", "xlab" = "Double BP",
-#               "HCRName" = "DoubleBP", "F_target" = F_targets, "B_trigger" = "MSYBtrigger",
-#               "minTAC" = NA, "maxTAC" = NA, "TAC_IAV" = NA,
-#               "Obs" = Uncertainties)
+MP5.20 <- list("code"     = "MP5.20", 
+               "desc"     = "Double BP HCR", 
+               "xlab"     = "Double BP",
+               "HCRName"  = "DoubleBP", 
+               "F_target" = c(F_targets, 0.074), 
+               "B_trigger"= "MSYBtrigger",
+               "minTAC"   = NA, 
+               "maxTAC"   = NA, 
+               "TAC_IAV"  = NA,
+               "Obs"      = Uncertainties)
 
 # MP5.20.perf <- list("code" = "MP5.20.perf", "desc" = "Double BP HCR", "xlab" = "Double BP",
 #                "HCRName" = "DoubleBP", "F_target" = F_targets, "B_trigger" = "MSYBtrigger",
@@ -447,27 +453,28 @@ MP5.23 <- list("code" = "MP5.23",
                "Obs" = Uncertainties)
 
 #as 5.2 but with min TAC=50kt
-MP5.23.def <- list("code" = "MP5.23.def", "desc" = "Double BP HCR with default uncertainties",
-               "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
-               "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
-               "TAC_IAV" = c(0.2,0.2), "Obs" = Defaults)
+# MP5.23.def <- list("code" = "MP5.23.def", "desc" = "Double BP HCR with default uncertainties",
+#                "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
+#                "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
+#                "TAC_IAV" = c(0.2,0.2), "Obs" = Defaults)
 
 #5.23 but zero assessment uncertainty
-MP5.23.perf <- list("code" = "MP5.23.perf", "desc" = "Double BP HCR with perfect assessment",
-                   "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
-                   "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
-                   "TAC_IAV" = c(0.2,0.2), "Obs" = Perfect)
+# MP5.23.perf <- list("code" = "MP5.23.perf", "desc" = "Double BP HCR with perfect assessment",
+#                    "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
+#                    "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
+#                    "TAC_IAV" = c(0.2,0.2), "Obs" = Perfect)
 
 #5.23 but extreme assessment uncertainty
-MP5.23.ext <- list("code" = "MP5.23.ext", "desc" = "Double BP HCR with extreme assessment error",
-                    "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
-                    "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
-                    "TAC_IAV" = c(0.2,0.2), "Obs" = Extreme)
+# MP5.23.ext <- list("code" = "MP5.23.ext", "desc" = "Double BP HCR with extreme assessment error",
+#                     "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
+#                     "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
+#                     "TAC_IAV" = c(0.2,0.2), "Obs" = Extreme)
 
-MP5.23.ext0 <- list("code" = "MP5.23.ext0", "desc" = "Double BP HCR with extreme assessment error",
-                   "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
-                   "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
-                   "TAC_IAV" = c(0.2,0.2), "Obs" = Extreme.zeroCor)
+# MP5.23.ext0 <- list("code" = "MP5.23.ext0", "desc" = "Double BP HCR with extreme assessment error",
+#                    "xlab" = "Double BP IAVBtrig", "HCRName" = "DoubleBP", "F_target" = F_targets,
+#                    "B_trigger" = "MSYBtrigger", "minTAC" = NA, "maxTAC" = NA,
+#                    "TAC_IAV" = c(0.2,0.2), "Obs" = Extreme.zeroCor)
+
 # ===========================================================================
 # Basic Test
 # ===========================================================================
